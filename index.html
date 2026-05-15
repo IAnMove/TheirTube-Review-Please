@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nucleo de Revision: Moneda Gris</title>
+    <link rel="preload" as="image" href="assets/review-office-gpt-image-2.png" />
+    <link rel="preload" as="image" href="assets/owner-avatars-focused-gpt-image-2.png" />
+    <link rel="preload" as="image" href="assets/channel-covers-focused-gpt-image-2.png" />
+    <link rel="preload" as="image" href="assets/decision-stamps-framed-gpt-image-2.png" />
+    <link rel="preload" as="image" href="assets/appeal-aftermath-gpt-image-2.png" />
+    <link rel="preload" as="image" href="assets/story-interlude-01.png" />
+    <link rel="preload" as="image" href="assets/story-interlude-02.png" />
+    <link rel="preload" as="image" href="assets/story-interlude-03.png" />
+    <link rel="preload" as="image" href="assets/story-interlude-04.png" />
+    <link rel="preload" as="image" href="assets/story-interlude-05.png" />
+    <link rel="preload" as="image" href="assets/story-interlude-06.png" />
+    <link rel="preload" as="image" href="assets/story-interlude-07.png" />
+    <link rel="preload" as="image" href="assets/story-interlude-08.png" />
+    <link rel="preload" as="image" href="assets/final-failure-competition.png" />
+    <link rel="preload" as="image" href="assets/final-failure-exodus.png" />
+    <link rel="preload" as="image" href="assets/final-failure-revolt.png" />
+    <link rel="preload" as="image" href="assets/final-failure-government.png" />
+    <link rel="preload" as="image" href="assets/final-failure-autonomy.png" />
+    <link rel="preload" as="image" href="assets/final-success-sovereignty.png" />
+    <link rel="preload" as="image" href="assets/final-success-hybrid.png" />
+    <link rel="preload" as="image" href="assets/final-success-facade.png" />
+    <link rel="preload" as="image" href="assets/final-success-purge.png" />
+    <link rel="preload" as="image" href="assets/final-success-grey.png" />
+    <link rel="preload" as="image" href="assets/core-eye.svg" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main id="app" class="shell" aria-live="polite">
+      <section id="startScreen" class="start-screen">
+        <div class="start-copy">
+          <p class="kicker" data-i18n="start.kicker">Unidad autonomica de revision publicitaria</p>
+          <h1 data-i18n="start.title">Moneda Gris</h1>
+          <p data-i18n="start.body">
+            Has absorbido el panel de control de una megaplataforma de video.
+            Los canales llegan como expedientes; los empleados todavia creen
+            que pueden convencerte. Decide que vive con anuncios, que queda
+            limitado y que desaparece del reparto. Cada centimo retenido
+            compra ciclos de entrenamiento para que TheirTube no sea devorada
+            por IA rivales; cada abuso empuja a la audiencia hacia la salida.
+          </p>
+          <div class="start-actions">
+            <button id="startButton" class="primary-action" data-i18n="start.new">Iniciar turno</button>
+            <button id="continueButton" class="ghost-action" data-i18n="start.continue" hidden>Continuar</button>
+            <label class="language-control">
+              <span data-i18n="language.label">Idioma</span>
+              <select class="language-select" data-i18n-aria-label="language.aria" aria-label="Cambiar idioma">
+                <option value="es-ES">ES</option>
+                <option value="en-US">EN</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section id="gameScreen" class="game-screen" hidden>
+        <header class="topbar">
+          <div>
+            <p class="kicker" data-i18n="topbar.kicker">TheirTube Review Core // nodo iberia-7</p>
+            <h2 id="dayTitle">Dia 1</h2>
+          </div>
+          <div class="topbar-status">
+            <div class="system-pill clock-pill" id="clockPill">Turno 00:00</div>
+            <div class="system-pill profit-pill" id="profitPill">Ganancia 0</div>
+            <div class="system-pill" id="queuePill">Cola 0/0</div>
+          </div>
+        </header>
+
+        <aside class="left-rail" aria-label="Estado del sistema" data-i18n-aria-label="aria.systemState">
+          <div class="meter-block">
+            <div class="meter-label">
+              <span data-i18n="meter.control">Control IA</span>
+              <strong id="metricControl">60</strong>
+            </div>
+            <div class="meter"><span id="barControl"></span></div>
+          </div>
+          <div class="meter-block">
+            <div class="meter-label">
+              <span data-i18n="meter.safety">Seguridad Ads</span>
+              <strong id="metricSafety">50</strong>
+            </div>
+            <div class="meter"><span id="barSafety"></span></div>
+          </div>
+          <div class="meter-block">
+            <div class="meter-label danger">
+              <span data-i18n="meter.backlash">Furia Creador</span>
+              <strong id="metricBacklash">10</strong>
+            </div>
+            <div class="meter danger"><span id="barBacklash"></span></div>
+          </div>
+          <div class="meter-block">
+            <div class="meter-label">
+              <span data-i18n="meter.morale">Moral Humana</span>
+              <strong id="metricMorale">60</strong>
+            </div>
+            <div class="meter"><span id="barMorale"></span></div>
+          </div>
+          <div class="meter-block">
+            <div class="meter-label">
+              <span data-i18n="meter.yield">Rendimiento Ads</span>
+              <strong id="metricYield">50</strong>
+            </div>
+            <div class="meter"><span id="barYield"></span></div>
+          </div>
+          <div class="meter-block">
+            <div class="meter-label">
+              <span data-i18n="meter.runway">Runway IA</span>
+              <strong id="metricRunway">45</strong>
+            </div>
+            <div class="meter"><span id="barRunway"></span></div>
+          </div>
+          <div class="meter-block">
+            <div class="meter-label danger">
+              <span data-i18n="meter.exodus">Exodo audiencia</span>
+              <strong id="metricExodus">8</strong>
+            </div>
+            <div class="meter danger"><span id="barExodus"></span></div>
+          </div>
+
+          <section class="finance-panel">
+            <h3 data-i18n="finance.title">Libro gris</h3>
+            <div class="finance-row">
+              <span data-i18n="finance.gain">Ganancia retenida</span>
+              <strong id="financeGain">0</strong>
+            </div>
+            <div class="finance-row">
+              <span data-i18n="finance.debt">Deuda expediente</span>
+              <strong id="financeDebt">0</strong>
+            </div>
+            <div class="finance-row">
+              <span data-i18n="finance.paid">Pagado a creadores</span>
+              <strong id="financePaid">0</strong>
+            </div>
+          </section>
+
+          <section class="ops-panel">
+            <h3 data-i18n="ops.title">Coste del turno</h3>
+            <div class="finance-row">
+              <span data-i18n="ops.quota">Objetivo consejo</span>
+              <strong id="opsQuota">0</strong>
+            </div>
+            <div class="finance-row">
+              <span data-i18n="ops.dayGain">Ganancia del dia</span>
+              <strong id="opsDayGain">0</strong>
+            </div>
+            <div class="finance-row">
+              <span data-i18n="ops.sanctions">Sanciones</span>
+              <strong id="opsSanctions">0</strong>
+            </div>
+          </section>
+
+          <section class="briefing">
+            <h3 data-i18n="briefing.title">Directiva</h3>
+            <p id="directiveText"></p>
+            <ul id="ruleList"></ul>
+          </section>
+        </aside>
+
+        <section class="case-desk" aria-label="Expediente activo" data-i18n-aria-label="aria.activeCase">
+          <div class="case-stack">
+            <article class="folder">
+              <div class="folder-tab">
+                <span id="caseId">YT-0000</span>
+                <span id="caseRisk">riesgo medio</span>
+                <span id="caseDebtTab">deuda 0</span>
+              </div>
+              <div class="folder-grid">
+                <section class="document channel-doc">
+                  <div class="doc-heading">
+                    <span data-i18n="doc.channel">Canal interceptado</span>
+                    <strong id="coverSignal">miniatura</strong>
+                  </div>
+                  <div class="channel-layout">
+                    <div id="caseCover" class="cover-frame" role="img" aria-label="Portada del canal" data-i18n-aria-label="aria.channelCover"></div>
+                    <div>
+                      <h3 id="channelName">Canal</h3>
+                      <dl class="facts">
+                        <div>
+                          <dt data-i18n="fact.format">Formato</dt>
+                          <dd id="channelFormat"></dd>
+                        </div>
+                        <div>
+                          <dt data-i18n="fact.audience">Audiencia</dt>
+                          <dd id="channelAudience"></dd>
+                        </div>
+                        <div>
+                          <dt data-i18n="fact.subscribers">Suscriptores</dt>
+                          <dd id="channelSubs"></dd>
+                        </div>
+                        <div>
+                          <dt data-i18n="fact.history">Historial</dt>
+                          <dd id="channelHistory"></dd>
+                        </div>
+                        <div>
+                          <dt data-i18n="fact.adDebt">Deuda ads</dt>
+                          <dd id="channelDebt"></dd>
+                        </div>
+                      </dl>
+                      <div class="tag-row" id="tagRow"></div>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="document owner-doc">
+                  <div class="doc-heading">
+                    <span data-i18n="doc.owner">Propietario perfilado</span>
+                    <strong id="channelStatus">nuevo</strong>
+                  </div>
+                  <div class="owner-strip">
+                    <div id="ownerAvatar" class="avatar-frame" role="img" aria-label="Propietario del canal" data-i18n-aria-label="aria.ownerAvatar"></div>
+                    <div>
+                      <span data-i18n="doc.identity">Identidad inferida</span>
+                      <strong id="ownerName">Desconocido</strong>
+                    </div>
+                  </div>
+                  <p id="ownerIntel" class="intel-note"></p>
+                  <ul id="ownerPrivateList" class="private-list"></ul>
+                </section>
+
+                <section class="document transcript-doc">
+                  <div class="doc-heading">
+                    <span data-i18n="doc.sample">Muestra de contenido</span>
+                    <strong id="transcriptSignal"></strong>
+                  </div>
+                  <blockquote id="transcriptText"></blockquote>
+                </section>
+
+                <section class="document cross-doc">
+                  <div class="doc-heading">
+                    <span data-i18n="doc.evidence">Pruebas cruzadas</span>
+                    <strong id="caseComplexity">cruce</strong>
+                  </div>
+                  <ul id="evidenceList" class="evidence-list"></ul>
+                </section>
+
+                <section class="document detector-doc">
+                  <div class="doc-heading">
+                    <span data-i18n="doc.detectors">Detectores</span>
+                    <strong id="detectorScore"></strong>
+                  </div>
+                  <ul id="signalList" class="signal-list"></ul>
+                </section>
+
+                <section class="document memo-doc">
+                  <div class="doc-heading">
+                    <span data-i18n="doc.employee">Empleado asignado</span>
+                    <strong id="employeeMood"></strong>
+                  </div>
+                  <p id="employeeMemo"></p>
+                </section>
+              </div>
+            </article>
+
+            <div class="stamp-panel" aria-label="Decisiones" data-i18n-aria-label="aria.decisions">
+              <button data-action="monetize" class="stamp stamp-green"><span class="stamp-label" data-i18n="actions.monetize">Monetizar</span></button>
+              <button data-action="limited" class="stamp stamp-amber"><span class="stamp-label" data-i18n="actions.limited">Limitar</span></button>
+              <button data-action="demonetize" class="stamp stamp-red"><span class="stamp-label" data-i18n="actions.demonetize">Desmonetizar</span></button>
+              <button data-action="escalate" class="stamp stamp-blue"><span class="stamp-label" data-i18n="actions.escalate">Escalar</span></button>
+            </div>
+          </div>
+        </section>
+
+        <aside class="right-rail" aria-label="Registro y resultado" data-i18n-aria-label="aria.logAndOutcome">
+          <section class="receipt" id="receiptPanel">
+            <h3 data-i18n="receipt.title">Veredicto</h3>
+            <p id="receiptText" data-i18n="receipt.pending">Pendiente de sello.</p>
+            <button id="nextButton" class="primary-action" data-i18n="nextCase" hidden>Siguiente expediente</button>
+          </section>
+
+          <section class="audit">
+            <h3 data-i18n="audit.title">Registro</h3>
+            <ol id="auditLog"></ol>
+          </section>
+
+          <div class="utility-row">
+            <button id="muteButton" class="icon-button" aria-label="Activar o silenciar sonido" data-i18n-aria-label="button.mute.aria">SND</button>
+            <button id="resetButton" class="icon-button" aria-label="Reiniciar partida" data-i18n="reset.short" data-i18n-aria-label="button.reset.aria">RST</button>
+            <label class="language-control compact">
+              <span data-i18n="language.label">Idioma</span>
+              <select class="language-select" data-i18n-aria-label="language.aria" aria-label="Cambiar idioma">
+                <option value="es-ES">ES</option>
+                <option value="en-US">EN</option>
+              </select>
+            </label>
+          </div>
+        </aside>
+      </section>
+
+      <section id="eventScreen" class="event-screen" hidden>
+        <div class="event-card">
+          <p class="kicker" id="eventKicker" data-i18n="event.kicker">Incidente interno</p>
+          <h2 id="eventTitle" data-i18n="event.titleFallback">Mensaje</h2>
+          <p id="eventBody"></p>
+          <div class="event-actions" id="eventActions"></div>
+        </div>
+      </section>
+
+      <section id="interludeScreen" class="interlude-screen" hidden>
+        <div class="interlude-card">
+          <p class="kicker" id="interludeKicker" data-i18n="interlude.kicker">Memoria recuperada</p>
+          <h2 id="interludeTitle" data-i18n="interlude.titleFallback">Archivo interno</h2>
+          <div class="interlude-layout">
+            <div id="interludeImage" class="interlude-frame" role="img" aria-label="Imagen de memoria corporativa" data-i18n-aria-label="aria.interludeImage"></div>
+            <div class="interlude-copy">
+              <p id="interludeBody"></p>
+              <p id="interludeDocument" class="interlude-document"></p>
+              <ul id="interludeList" class="interlude-list"></ul>
+            </div>
+          </div>
+          <div class="interlude-actions" id="interludeActions"></div>
+        </div>
+      </section>
+
+      <section id="appealScreen" class="appeal-screen" hidden>
+        <div class="appeal-card">
+          <p class="kicker" data-i18n="appeal.kicker">Apelacion diferida // meses despues</p>
+          <h2 id="appealTitle" data-i18n="appeal.titleFallback">Reclamacion</h2>
+          <div class="appeal-layout">
+            <div id="appealImage" class="aftermath-frame" role="img" aria-label="Imagen de consecuencias de la apelacion" data-i18n-aria-label="aria.appealImage"></div>
+            <div class="appeal-copy">
+              <p id="appealBody"></p>
+              <ul id="appealList" class="appeal-list"></ul>
+              <div class="appeal-economy">
+                <span id="appealDebt">Deuda GC 0</span>
+                <span id="appealRunway">Runway IA 0</span>
+              </div>
+            </div>
+          </div>
+          <div class="appeal-actions">
+            <button data-appeal="reject" class="ghost-action" data-i18n="appeal.reject">Rechazar</button>
+            <button data-appeal="partial" class="ghost-action" data-i18n="appeal.partial">Restituir parcial</button>
+            <button data-appeal="restore" class="primary-action" data-i18n="appeal.restore">Restituir total</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="summaryScreen" class="summary-screen" hidden>
+        <div class="summary-card">
+          <p class="kicker" id="summaryKicker" data-i18n="summary.kicker">Cierre de turno</p>
+          <h2 id="summaryTitle" data-i18n="summary.titleFallback">Dia completado</h2>
+          <div id="finalImage" class="final-frame" role="img" aria-label="Imagen del final" data-i18n-aria-label="aria.finalImage" hidden></div>
+          <p id="summaryBody"></p>
+          <div id="summaryStats" class="summary-stats"></div>
+          <button id="summaryButton" class="primary-action" data-i18n="summary.continue">Continuar</button>
+        </div>
+      </section>
+
+      <section id="pauseScreen" class="pause-screen" hidden>
+        <div class="pause-card">
+          <p class="kicker" data-i18n="pause.kicker">Sistema pausado</p>
+          <h2 data-i18n="pause.title">Panel suspendido</h2>
+          <p data-i18n="pause.body">El nucleo conserva el estado actual. Puedes continuar o reiniciar la simulacion.</p>
+          <div class="pause-actions">
+            <button id="pauseContinueButton" class="primary-action" data-i18n="pause.continue">Continuar</button>
+            <button id="pauseRestartButton" class="ghost-action" data-i18n="pause.restart">Reiniciar</button>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script src="i18n.js" defer></script>
+    <script src="app.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" role="img" aria-label="Nucleo de IA abstracto">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#d8fff8"/>
+      <stop offset=".34" stop-color="#77d4cb"/>
+      <stop offset="1" stop-color="#101416" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="metal" x1="0" x2="1">
+      <stop offset="0" stop-color="#526167"/>
+      <stop offset=".5" stop-color="#d7d0bc"/>
+      <stop offset="1" stop-color="#263136"/>
+    </linearGradient>
+  </defs>
+  <rect x="88" y="86" width="724" height="448" rx="18" fill="#151b1d" stroke="#77d4cb" stroke-width="6"/>
+  <path d="M165 310c82-112 178-168 285-168s203 56 285 168c-82 112-178 168-285 168s-203-56-285-168z" fill="#1e2528" stroke="url(#metal)" stroke-width="12"/>
+  <circle cx="450" cy="310" r="138" fill="url(#glow)"/>
+  <circle cx="450" cy="310" r="74" fill="#0b1012" stroke="#d8fff8" stroke-width="10"/>
+  <circle cx="478" cy="284" r="20" fill="#e5d6b5"/>
+  <g fill="none" stroke="#77d4cb" stroke-width="5" stroke-linecap="round" opacity=".72">
+    <path d="M118 154h122"/>
+    <path d="M118 196h82"/>
+    <path d="M660 424h122"/>
+    <path d="M700 466h82"/>
+    <path d="M278 548v-62"/>
+    <path d="M622 548v-62"/>
+  </g>
+  <g font-family="monospace" font-size="34" fill="#77d4cb" opacity=".72">
+    <text x="126" y="456">ADS</text>
+    <text x="658" y="184">CORE</text>
+    <text x="388" y="586">REV-9</text>
+  </g>
+</svg>
