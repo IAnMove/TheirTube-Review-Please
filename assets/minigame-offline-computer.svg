@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 250" role="img" aria-labelledby="title desc" shape-rendering="geometricPrecision">
+  <title id="title">Improved offline computer model</title>
+  <desc id="desc">A stylized dormant desktop computer and tower for the Modelo Sin Corriente minigame.</desc>
+  <defs>
+    <linearGradient id="screen" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#17231f"/>
+      <stop offset="1" stop-color="#050708"/>
+    </linearGradient>
+    <linearGradient id="case" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#8a8e93"/>
+      <stop offset="1" stop-color="#4f5359"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#2c3338"/>
+      <stop offset="1" stop-color="#11161a"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="460" height="250" fill="none"/>
+  <g transform="translate(28 20)">
+    <rect x="0" y="0" width="196" height="128" rx="10" fill="#10161a"/>
+    <rect x="8" y="8" width="180" height="94" rx="6" fill="#20262b"/>
+    <rect x="22" y="20" width="152" height="70" fill="url(#screen)"/>
+    <path d="M34 28 H160 M34 42 H132 M34 56 H148" stroke="#29463d" stroke-width="4" opacity="0.28"/>
+    <rect x="80" y="108" width="40" height="32" rx="4" fill="#777b7b" stroke="#161a1d" stroke-width="5"/>
+    <rect x="48" y="138" width="104" height="14" rx="7" fill="#9b9b96" stroke="#15191c" stroke-width="4"/>
+    <rect x="14" y="162" width="168" height="22" rx="8" fill="#5d6263" stroke="#181d20" stroke-width="5"/>
+    <rect x="42" y="169" width="92" height="7" rx="3" fill="#2e3437"/>
+  </g>
+  <g transform="translate(284 16)">
+    <rect x="0" y="0" width="124" height="168" rx="10" fill="url(#edge)"/>
+    <rect x="10" y="10" width="104" height="148" rx="6" fill="url(#case)"/>
+    <rect x="30" y="32" width="66" height="10" rx="2" fill="#181d20"/>
+    <rect x="24" y="58" width="76" height="5" rx="2" fill="#444a50"/>
+    <rect x="24" y="75" width="76" height="5" rx="2" fill="#444a50"/>
+    <rect x="24" y="92" width="76" height="5" rx="2" fill="#444a50"/>
+    <circle cx="62" cy="123" r="12" fill="#272d31" stroke="#15191c" stroke-width="5"/>
+    <circle cx="62" cy="123" r="5" fill="#8b3a33"/>
+    <rect x="90" y="132" width="12" height="12" fill="#5d3c3a"/>
+  </g>
+  <path d="M196 89 C239 68 258 72 284 92" fill="none" stroke="#1a2024" stroke-width="8" stroke-linecap="round"/>
+  <path d="M194 89 C239 69 258 73 282 93" fill="none" stroke="#4e565a" stroke-width="3" stroke-linecap="round"/>
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="800" text-anchor="middle">
+    <text x="230" y="226" font-size="25" fill="#ff6668" stroke="#11161a" stroke-width="4" paint-order="stroke">MODELO DESACTIVADO</text>
+  </g>
+</svg>

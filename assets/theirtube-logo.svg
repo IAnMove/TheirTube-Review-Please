@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 320" role="img" aria-labelledby="title desc">
+  <title id="title">TheirTube logo</title>
+  <desc id="desc">Fictional TheirTube logo: a surveillance-eye seal and a corporate video-platform wordmark.</desc>
+  <defs>
+    <linearGradient id="panelRed" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ff5a4f"/>
+      <stop offset="0.45" stop-color="#c92828"/>
+      <stop offset="1" stop-color="#751315"/>
+    </linearGradient>
+    <linearGradient id="tubeDark" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#171b1c"/>
+      <stop offset="1" stop-color="#080a0a"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#fff0bd"/>
+      <stop offset="1" stop-color="#d2b765"/>
+    </linearGradient>
+    <filter id="paperNoise" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.78" numOctaves="2" seed="19" result="noise"/>
+      <feColorMatrix in="noise" type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.13"/>
+      </feComponentTransfer>
+      <feBlend in="SourceGraphic" mode="multiply"/>
+    </filter>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="7" dy="8" stdDeviation="0" flood-color="#000000" flood-opacity="0.55"/>
+    </filter>
+  </defs>
+
+  <rect width="980" height="320" fill="#0f1110"/>
+  <rect x="16" y="18" width="948" height="284" fill="#151914" stroke="#6c6248" stroke-width="3"/>
+  <path d="M38 52 H942 M38 268 H942" stroke="#2d342e" stroke-width="5"/>
+  <path d="M54 72 H926 M54 248 H926" stroke="#6c6248" stroke-width="2" stroke-dasharray="18 13" opacity="0.58"/>
+
+  <g transform="translate(70 66)" filter="url(#shadow)">
+    <rect x="0" y="0" width="266" height="168" rx="42" fill="url(#panelRed)" stroke="#100d0c" stroke-width="12"/>
+    <rect x="18" y="18" width="230" height="132" rx="29" fill="none" stroke="#ffd38f" stroke-width="5" opacity="0.42"/>
+    <path d="M56 84 C82 43 131 30 174 54 C193 65 207 78 218 84 C207 90 193 103 174 114 C131 138 82 125 56 84Z" fill="#10120f" stroke="#f4df9f" stroke-width="8"/>
+    <circle cx="140" cy="84" r="35" fill="#f4df9f"/>
+    <circle cx="140" cy="84" r="17" fill="#11130f"/>
+    <circle cx="146" cy="78" r="6" fill="#d9483c"/>
+    <path d="M38 34 H228 M38 134 H228" stroke="#11130f" stroke-width="5" opacity="0.52"/>
+  </g>
+
+  <g filter="url(#paperNoise)">
+    <text x="372" y="147"
+      font-family="Impact, 'Arial Black', 'Lucida Console', monospace"
+      font-size="83"
+      font-weight="900"
+      letter-spacing="1"
+      fill="url(#paper)"
+      stroke="#080a0a"
+      stroke-width="5"
+      paint-order="stroke">TheirTube</text>
+    <text x="377" y="194"
+      font-family="'Lucida Console', Consolas, monospace"
+      font-size="24"
+      font-weight="900"
+      letter-spacing="6"
+      fill="#9dcc9d">MINISTRY OF ATTENTION</text>
+    <text x="379" y="226"
+      font-family="'Lucida Console', Consolas, monospace"
+      font-size="16"
+      font-weight="700"
+      letter-spacing="3"
+      fill="#b9b099">AD REVIEW • CREATOR PAYOUTS • CONTINUITY</text>
+  </g>
+
+  <g opacity="0.78">
+    <path d="M830 84 H910 V164 H830Z" fill="none" stroke="#7a6e4d" stroke-width="3"/>
+    <path d="M846 104 H894 M846 124 H894 M846 144 H878" stroke="#7a6e4d" stroke-width="4"/>
+    <circle cx="910" cy="220" r="15" fill="#d9483c" stroke="#080a0a" stroke-width="5"/>
+    <path d="M900 220 H850" stroke="#7a6e4d" stroke-width="4"/>
+  </g>
+</svg>

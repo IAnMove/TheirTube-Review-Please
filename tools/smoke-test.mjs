@@ -150,30 +150,37 @@ async function main() {
   const boot = await evaluate(`({
     title: document.title,
     startVisible: !document.querySelector("#startScreen").hidden,
-    hasStartButton: !!document.querySelector("#startButton")
+    hasStartButton: !!document.querySelector("#startButton"),
+    startButton: document.querySelector("#startButton").textContent,
+    startKicker: document.querySelector("#startScreen .kicker").textContent,
+    htmlLang: document.documentElement.lang,
+    selectedLocale: document.querySelector(".language-select").value
   })`);
-  if (!boot.startVisible || !boot.hasStartButton) {
+  if (
+    !boot.startVisible ||
+    !boot.hasStartButton ||
+    boot.startButton !== "Start shift" ||
+    !boot.startKicker.includes("Autonomous") ||
+    boot.htmlLang !== "en-US" ||
+    boot.selectedLocale !== "en-US"
+  ) {
     throw new Error(`Unexpected boot state: ${JSON.stringify(boot)}`);
   }
   await screenshot("01-start.png");
 
-  await evaluate(`
-    document.querySelector(".language-select").value = "en-US";
-    document.querySelector(".language-select").dispatchEvent(new Event("change", { bubbles: true }));
-    true
-  `);
-  await sleep(80);
   const englishBoot = await evaluate(`({
     title: document.title,
     startButton: document.querySelector("#startButton").textContent,
     startKicker: document.querySelector("#startScreen .kicker").textContent,
-    htmlLang: document.documentElement.lang
+    htmlLang: document.documentElement.lang,
+    selectedLocale: document.querySelector(".language-select").value
   })`);
   if (
-    englishBoot.title !== "Review Core: Grey Coin" ||
+    englishBoot.title !== "TheirTube: ReviewPlease" ||
     englishBoot.startButton !== "Start shift" ||
     !englishBoot.startKicker.includes("Autonomous") ||
-    englishBoot.htmlLang !== "en-US"
+    englishBoot.htmlLang !== "en-US" ||
+    englishBoot.selectedLocale !== "en-US"
   ) {
     throw new Error(`English start localization failed: ${JSON.stringify(englishBoot)}`);
   }
@@ -215,6 +222,33 @@ async function main() {
     throw new Error(`Unexpected first case: ${JSON.stringify(firstCase)}`);
   }
   await screenshot("02-first-case.png");
+
+  const resetCancelState = await evaluate(`(() => {
+    const originalConfirm = window.confirm;
+    let confirmMessage = "";
+    window.confirm = (message) => {
+      confirmMessage = message;
+      return false;
+    };
+    document.querySelector("#resetButton").click();
+    window.confirm = originalConfirm;
+    return {
+      confirmMessage,
+      gameVisible: !document.querySelector("#gameScreen").hidden,
+      startVisible: !document.querySelector("#startScreen").hidden,
+      saved: !!localStorage.getItem("grey-coin-save"),
+      dayTitle: document.querySelector("#dayTitle").textContent
+    };
+  })()`);
+  if (
+    !resetCancelState.confirmMessage.includes("Reiniciar la simulacion") ||
+    !resetCancelState.gameVisible ||
+    resetCancelState.startVisible ||
+    !resetCancelState.saved ||
+    !resetCancelState.dayTitle.includes("Dia 1")
+  ) {
+    throw new Error(`Reset confirmation cancel failed: ${JSON.stringify(resetCancelState)}`);
+  }
 
   await evaluate(`
     document.querySelector(".language-select").value = "en-US";
@@ -292,12 +326,59 @@ async function main() {
       await sleep(80);
     }
 
+    const daySummaryState = await evaluate(`({
+      summaryVisible: !document.querySelector("#summaryScreen").hidden,
+      mode: document.querySelector("#summaryScreen").dataset.mode,
+      title: document.querySelector("#summaryTitle").textContent,
+      body: document.querySelector("#summaryBody").textContent,
+      button: document.querySelector("#summaryButton").textContent
+    })`);
+    if (!daySummaryState.summaryVisible || daySummaryState.mode !== "day-summary" || !daySummaryState.title.includes("Dia")) {
+      throw new Error(`Day summary did not open before agenda: ${JSON.stringify(daySummaryState)}`);
+    }
+    await evaluate(`document.querySelector("#summaryButton").click(); true`);
+    await sleep(100);
+
+    const expectedTransitionTarget = dayIndex === plan.length - 1 ? "Dictamen final" : `Dia ${dayIndex + 2}`;
+    const transitionState = await evaluate(`({
+      summaryVisible: !document.querySelector("#summaryScreen").hidden,
+      mode: document.querySelector("#summaryScreen").dataset.mode,
+      title: document.querySelector("#summaryTitle").textContent,
+      body: document.querySelector("#summaryBody").textContent,
+      button: document.querySelector("#summaryButton").textContent,
+      stats: document.querySelector("#summaryStats").textContent
+    })`);
+    if (
+      !transitionState.summaryVisible ||
+      transitionState.mode !== "day-start" ||
+      !transitionState.title.includes(expectedTransitionTarget) ||
+      !transitionState.stats.includes(expectedTransitionTarget)
+    ) {
+      throw new Error(`Day transition did not open clearly: ${JSON.stringify(transitionState)}`);
+    }
+    if (dayIndex === 0) {
+      await screenshot("04-day-transition.png");
+      await client.send("Emulation.setDeviceMetricsOverride", {
+        width: 390,
+        height: 844,
+        deviceScaleFactor: 1,
+        mobile: true,
+      });
+      await sleep(120);
+      await screenshot("04a-mobile-day-transition.png");
+      await client.send("Emulation.clearDeviceMetricsOverride");
+      await sleep(120);
+    }
+    await evaluate(`document.querySelector("#summaryButton").click(); true`);
+    await sleep(100);
+
     const eventState = await evaluate(`({
       eventVisible: !document.querySelector("#eventScreen").hidden,
+      kicker: document.querySelector("#eventKicker").textContent,
       choices: document.querySelectorAll("#eventActions button").length
     })`);
-    if (!eventState.eventVisible || eventState.choices !== 2) {
-      throw new Error(`Event did not open: ${JSON.stringify(eventState)}`);
+    if (!eventState.eventVisible || eventState.choices !== 2 || !eventState.kicker.includes("consecuencias")) {
+      throw new Error(`Event did not open as day-start agenda: ${JSON.stringify(eventState)}`);
     }
     await evaluate(`document.querySelector("#eventActions button").click(); true`);
     await sleep(80);
@@ -313,6 +394,7 @@ async function main() {
     for (const expectedImage of expectedInterludes[dayIndex]) {
       const interludeState = await evaluate(`({
         interludeVisible: !document.querySelector("#interludeScreen").hidden,
+        kicker: document.querySelector("#interludeKicker").textContent,
         title: document.querySelector("#interludeTitle").textContent,
         fragments: document.querySelectorAll("#interludeList li").length,
         choices: document.querySelectorAll("#interludeActions button").length,
@@ -320,6 +402,7 @@ async function main() {
       })`);
       if (
         !interludeState.interludeVisible ||
+        !interludeState.kicker.includes(dayIndex === plan.length - 1 ? "dictamen" : "Arranque") ||
         interludeState.fragments !== 3 ||
         interludeState.choices < 2 ||
         !interludeState.imageBg.includes(expectedImage)
@@ -366,35 +449,33 @@ async function main() {
 
     const appealState = await evaluate(`({
       appealVisible: !document.querySelector("#appealScreen").hidden,
+      kicker: document.querySelector("#appealKicker").textContent,
       title: document.querySelector("#appealTitle").textContent,
       points: document.querySelectorAll("#appealList li").length,
       imageBg: getComputedStyle(document.querySelector("#appealImage")).backgroundImage
     })`);
-    if (!appealState.appealVisible || appealState.points !== 3 || !appealState.imageBg.includes("appeal-aftermath-gpt-image-2.png")) {
+    if (
+      !appealState.appealVisible ||
+      !appealState.kicker.includes(dayIndex === plan.length - 1 ? "dictamen" : "Arranque") ||
+      appealState.points !== 3 ||
+      !appealState.imageBg.includes("appeal-aftermath-gpt-image-2.png")
+    ) {
       throw new Error(`Appeal did not open correctly: ${JSON.stringify(appealState)}`);
     }
     if (dayIndex === 0) {
       await screenshot("05-appeal.png");
     }
     await evaluate(`document.querySelector('[data-appeal="reject"]').click(); true`);
-    await sleep(80);
-
-    const summaryState = await evaluate(`({
-      summaryVisible: !document.querySelector("#summaryScreen").hidden,
-      title: document.querySelector("#summaryTitle").textContent
-    })`);
-    if (!summaryState.summaryVisible || !summaryState.title) {
-      throw new Error(`Summary did not open: ${JSON.stringify(summaryState)}`);
-    }
-    await evaluate(`document.querySelector("#summaryButton").click(); true`);
     await sleep(100);
-    if (dayIndex === 0) {
+
+    if (dayIndex < plan.length - 1) {
       const edictState = await evaluate(`({
         gameVisible: !document.querySelector("#gameScreen").hidden,
+        dayTitle: document.querySelector("#dayTitle").textContent,
         rules: document.querySelector("#ruleList").textContent
       })`);
-      if (!edictState.gameVisible || !edictState.rules.includes("Edicto activo")) {
-        throw new Error(`Event edict was not carried into the next day: ${JSON.stringify(edictState)}`);
+      if (!edictState.gameVisible || !edictState.dayTitle.includes(`Dia ${dayIndex + 2}`) || !edictState.rules.includes("Edicto activo")) {
+        throw new Error(`Day-start agenda did not lead into the next day: ${JSON.stringify(edictState)}`);
       }
     }
   }

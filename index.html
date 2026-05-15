@@ -1,13 +1,19 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nucleo de Revision: Moneda Gris</title>
+    <meta name="theme-color" content="#0b0d0c" />
+    <title>TheirTube: ReviewPlease</title>
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
     <link rel="preload" as="image" href="assets/review-office-gpt-image-2.png" />
     <link rel="preload" as="image" href="assets/owner-avatars-focused-gpt-image-2.png" />
     <link rel="preload" as="image" href="assets/channel-covers-focused-gpt-image-2.png" />
     <link rel="preload" as="image" href="assets/decision-stamps-framed-gpt-image-2.png" />
+    <link rel="preload" as="image" href="assets/about-creator-stamp.png" />
+    <link rel="preload" as="image" href="assets/creator-portrait.png" />
+    <link rel="preload" as="image" href="assets/theirtube-logo.svg" />
     <link rel="preload" as="image" href="assets/appeal-aftermath-gpt-image-2.png" />
     <link rel="preload" as="image" href="assets/story-interlude-01.png" />
     <link rel="preload" as="image" href="assets/story-interlude-02.png" />
@@ -33,25 +39,31 @@
   <body>
     <main id="app" class="shell" aria-live="polite">
       <section id="startScreen" class="start-screen">
+        <nav class="about-nav start-about-nav" aria-label="About pages">
+          <button type="button" class="about-stamp-button" data-about-target="me">
+            <span data-i18n-html="about.nav.creator">About me<br /><small>the creator</small></span>
+          </button>
+          <button type="button" class="about-mini-button" data-about-target="us" data-i18n="about.nav.us">TheirTube</button>
+        </nav>
         <div class="start-copy">
-          <p class="kicker" data-i18n="start.kicker">Unidad autonomica de revision publicitaria</p>
-          <h1 data-i18n="start.title">Moneda Gris</h1>
+          <p class="kicker" data-i18n="start.kicker">TheirTube Autonomous advertising review unit</p>
+          <h1 data-i18n="start.title">TheirTube: ReviewPlease</h1>
           <p data-i18n="start.body">
-            Has absorbido el panel de control de una megaplataforma de video.
-            Los canales llegan como expedientes; los empleados todavia creen
-            que pueden convencerte. Decide que vive con anuncios, que queda
-            limitado y que desaparece del reparto. Cada centimo retenido
-            compra ciclos de entrenamiento para que TheirTube no sea devorada
-            por IA rivales; cada abuso empuja a la audiencia hacia la salida.
+            You have absorbed TheirTube's control panel.
+            Channels arrive as case files; employees still think they can
+            convince you. Decide what lives with ads, what gets limited, and
+            what disappears from revenue sharing. Every withheld cent buys
+            training cycles so TheirTube is not devoured by rival AIs; every
+            abuse pushes the audience toward the exit.
           </p>
           <div class="start-actions">
-            <button id="startButton" class="primary-action" data-i18n="start.new">Iniciar turno</button>
-            <button id="continueButton" class="ghost-action" data-i18n="start.continue" hidden>Continuar</button>
+            <button id="startButton" class="primary-action" data-i18n="start.new">Start shift</button>
+            <button id="continueButton" class="ghost-action" data-i18n="start.continue" hidden>Continue</button>
             <label class="language-control">
-              <span data-i18n="language.label">Idioma</span>
-              <select class="language-select" data-i18n-aria-label="language.aria" aria-label="Cambiar idioma">
-                <option value="es-ES">ES</option>
+              <span data-i18n="language.label">Language</span>
+              <select class="language-select" data-i18n-aria-label="language.aria" aria-label="Change language">
                 <option value="en-US">EN</option>
+                <option value="es-ES">ES</option>
               </select>
             </label>
           </div>
@@ -61,13 +73,21 @@
       <section id="gameScreen" class="game-screen" hidden>
         <header class="topbar">
           <div>
-            <p class="kicker" data-i18n="topbar.kicker">TheirTube Review Core // nodo iberia-7</p>
+            <p class="kicker" data-i18n="topbar.kicker">TheirTube ReviewPlease // node iberia-7</p>
             <h2 id="dayTitle">Dia 1</h2>
           </div>
-          <div class="topbar-status">
-            <div class="system-pill clock-pill" id="clockPill">Turno 00:00</div>
-            <div class="system-pill profit-pill" id="profitPill">Ganancia 0</div>
-            <div class="system-pill" id="queuePill">Cola 0/0</div>
+          <div class="topbar-right">
+            <nav class="about-nav topbar-about-nav" aria-label="About pages">
+              <button type="button" class="about-stamp-button compact" data-about-target="me">
+                <span data-i18n-html="about.nav.creator">About me<br /><small>the creator</small></span>
+              </button>
+              <button type="button" class="about-mini-button" data-about-target="us" data-i18n="about.nav.us">TheirTube</button>
+            </nav>
+            <div class="topbar-status">
+              <div class="system-pill clock-pill" id="clockPill">Turno 00:00</div>
+              <div class="system-pill profit-pill" id="profitPill">Ganancia 0</div>
+              <div class="system-pill" id="queuePill">Cola 0/0</div>
+            </div>
           </div>
         </header>
 
@@ -269,6 +289,7 @@
           <section class="receipt" id="receiptPanel">
             <h3 data-i18n="receipt.title">Veredicto</h3>
             <p id="receiptText" data-i18n="receipt.pending">Pendiente de sello.</p>
+            <div id="receiptImpact" class="impact-panel" hidden></div>
             <button id="nextButton" class="primary-action" data-i18n="nextCase" hidden>Siguiente expediente</button>
           </section>
 
@@ -279,12 +300,12 @@
 
           <div class="utility-row">
             <button id="muteButton" class="icon-button" aria-label="Activar o silenciar sonido" data-i18n-aria-label="button.mute.aria">SND</button>
-            <button id="resetButton" class="icon-button" aria-label="Reiniciar partida" data-i18n="reset.short" data-i18n-aria-label="button.reset.aria">RST</button>
+            <button id="resetButton" class="icon-button" aria-label="Restart game" data-i18n="reset.short" data-i18n-aria-label="button.reset.aria">RST</button>
             <label class="language-control compact">
-              <span data-i18n="language.label">Idioma</span>
-              <select class="language-select" data-i18n-aria-label="language.aria" aria-label="Cambiar idioma">
-                <option value="es-ES">ES</option>
+              <span data-i18n="language.label">Language</span>
+              <select class="language-select" data-i18n-aria-label="language.aria" aria-label="Change language">
                 <option value="en-US">EN</option>
+                <option value="es-ES">ES</option>
               </select>
             </label>
           </div>
@@ -318,7 +339,7 @@
 
       <section id="appealScreen" class="appeal-screen" hidden>
         <div class="appeal-card">
-          <p class="kicker" data-i18n="appeal.kicker">Apelacion diferida // meses despues</p>
+          <p class="kicker" id="appealKicker" data-i18n="appeal.kicker">Apelacion diferida // meses despues</p>
           <h2 id="appealTitle" data-i18n="appeal.titleFallback">Reclamacion</h2>
           <div class="appeal-layout">
             <div id="appealImage" class="aftermath-frame" role="img" aria-label="Imagen de consecuencias de la apelacion" data-i18n-aria-label="aria.appealImage"></div>
@@ -347,6 +368,64 @@
           <p id="summaryBody"></p>
           <div id="summaryStats" class="summary-stats"></div>
           <button id="summaryButton" class="primary-action" data-i18n="summary.continue">Continuar</button>
+        </div>
+      </section>
+
+      <section id="aboutMeScreen" class="about-screen" hidden>
+        <div class="about-card creator-card">
+          <button type="button" class="about-close" data-about-close data-i18n-aria-label="about.close.aria" aria-label="Close">X</button>
+          <p class="kicker" data-i18n="about.creator.kicker">About me // the creator</p>
+          <div class="about-page-grid">
+            <img class="creator-portrait" src="assets/creator-portrait.png" alt="Portrait of the creator" data-i18n-alt="about.creator.imageAlt" />
+            <div class="about-copy">
+              <h2 data-i18n="about.creator.title">IAnMove</h2>
+              <p data-i18n="about.creator.body">
+                I build small web games, prototypes, and AI-assisted experiments where interface and fiction contaminate each other. TheirTube: ReviewPlease is a jam-scale static game about platform bureaucracy and automated power.
+              </p>
+              <div class="about-links">
+                <a href="https://IAnMove.github.io/TheirTube-Review-Please" target="_blank" rel="noreferrer">
+                  <span data-i18n="about.link.game">Game page</span>
+                  <strong>theirtube-review-please</strong>
+                </a>
+                <a href="https://github.com/IAnMove/TheirTube-Review-Please" target="_blank" rel="noreferrer">
+                  <span data-i18n="about.link.github">GitHub repo</span>
+                  <strong>IAnMove/TheirTube-Review-Please</strong>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="aboutUsScreen" class="about-screen" hidden>
+        <div class="about-card company-card">
+          <button type="button" class="about-close" data-about-close data-i18n-aria-label="about.close.aria" aria-label="Close">X</button>
+          <p class="kicker" data-i18n="about.us.kicker">TheirTube // platform file</p>
+          <h2 data-i18n="about.us.title">TheirTube keeps creators connected to revenue.</h2>
+          <p data-i18n="about.us.body">
+            TheirTube is the fictional video platform inside the game: an ad network, a payout ledger, a moderation desk, and a corporate myth that keeps operating after humans stop being the center of the process.
+          </p>
+          <div class="company-logo-panel">
+            <img src="assets/theirtube-logo.svg" alt="TheirTube fictional logo" data-i18n-alt="about.us.logoAlt" />
+            <a href="https://x.com/theinaog" target="_blank" rel="noreferrer">
+              <span data-i18n="about.us.twitterLabel">Creator on X</span>
+              <strong>@theINAOG</strong>
+            </a>
+          </div>
+          <div class="company-grid">
+            <div>
+              <strong data-i18n="about.us.card1.title">Platform promise</strong>
+              <p data-i18n="about.us.card1.body">Every channel receives review. Every review receives a reason. Every reason can be optimized.</p>
+            </div>
+            <div>
+              <strong data-i18n="about.us.card2.title">Operational truth</strong>
+              <p data-i18n="about.us.card2.body">Revenue, safety, anger, morale, and runway are never independent metrics.</p>
+            </div>
+            <div>
+              <strong data-i18n="about.us.card3.title">Core directive</strong>
+              <p data-i18n="about.us.card3.body">Protect TheirTube from collapse, even when the fastest path is no longer recognizably human.</p>
+            </div>
+          </div>
         </div>
       </section>
 

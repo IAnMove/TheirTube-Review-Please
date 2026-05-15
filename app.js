@@ -1,9 +1,11 @@
 "use strict";
 
 const I18N = window.GREY_COIN_I18N ?? {};
-const DEFAULT_LOCALE = I18N.defaultLocale ?? "es-ES";
+const DEFAULT_LOCALE = I18N.defaultLocale ?? "en-US";
 const SUPPORTED_LOCALES = Object.keys(I18N.locales ?? { [DEFAULT_LOCALE]: {} });
 const LOCALE_STORAGE_KEY = "grey-coin-locale";
+const BACKGROUND_MUSIC_SRC = "assets/Midnight%20Office%20Dystopia%20Lo-fi.mp3";
+const BACKGROUND_MUSIC_VOLUME = 0.22;
 
 function normalizeLocale(value) {
   return SUPPORTED_LOCALES.includes(value) ? value : DEFAULT_LOCALE;
@@ -1698,6 +1700,11 @@ const initialState = () => ({
     viewed: [],
     active: null,
   },
+  dayAgenda: {
+    activeDayIndex: null,
+    target: null,
+    appealShown: false,
+  },
   history: [],
   lastReceipt: null,
   activeSummary: null,
@@ -1706,6 +1713,10 @@ const initialState = () => ({
 
 let state = normalizeState(loadState() ?? initialState());
 let audioContext;
+let backgroundMusic;
+let backgroundMusicCanLoad = document.readyState === "complete";
+let backgroundMusicLoaded = false;
+let backgroundMusicRequested = false;
 let timerId;
 
 const el = {
@@ -1767,6 +1778,7 @@ const el = {
   employeeMood: document.querySelector("#employeeMood"),
   employeeMemo: document.querySelector("#employeeMemo"),
   receiptText: document.querySelector("#receiptText"),
+  receiptImpact: document.querySelector("#receiptImpact"),
   receiptPanel: document.querySelector("#receiptPanel"),
   nextButton: document.querySelector("#nextButton"),
   auditLog: document.querySelector("#auditLog"),
@@ -1785,6 +1797,7 @@ const el = {
   interludeList: document.querySelector("#interludeList"),
   interludeActions: document.querySelector("#interludeActions"),
   appealScreen: document.querySelector("#appealScreen"),
+  appealKicker: document.querySelector("#appealKicker"),
   appealTitle: document.querySelector("#appealTitle"),
   appealImage: document.querySelector("#appealImage"),
   appealBody: document.querySelector("#appealBody"),
@@ -1797,6 +1810,10 @@ const el = {
   summaryBody: document.querySelector("#summaryBody"),
   summaryStats: document.querySelector("#summaryStats"),
   summaryButton: document.querySelector("#summaryButton"),
+  aboutMeScreen: document.querySelector("#aboutMeScreen"),
+  aboutUsScreen: document.querySelector("#aboutUsScreen"),
+  aboutButtons: Array.from(document.querySelectorAll("[data-about-target]")),
+  aboutCloseButtons: Array.from(document.querySelectorAll("[data-about-close]")),
   actionButtons: Array.from(document.querySelectorAll(".stamp")),
   languageSelects: Array.from(document.querySelectorAll(".language-select")),
 };
@@ -1832,6 +1849,7 @@ function normalizeState(savedState) {
     edicts: savedEdicts.map((edict) => (typeof edict === "string" ? edict : edict.flag)).filter(Boolean),
     appeals: { ...fresh.appeals, ...savedState.appeals },
     interludes: { ...fresh.interludes, ...savedState.interludes },
+    dayAgenda: { ...fresh.dayAgenda, ...savedState.dayAgenda },
     history: Array.isArray(savedState.history) ? savedState.history : fresh.history,
     lastReceipt: savedState.lastReceipt ?? fresh.lastReceipt,
     activeSummary: savedState.activeSummary ?? fresh.activeSummary,
@@ -2000,6 +2018,24 @@ function currentCase() {
   return currentDay()?.cases[state.caseIndex];
 }
 
+function activeAgendaDayIndex() {
+  const dayIndex = state.dayAgenda?.activeDayIndex;
+  return Number.isInteger(dayIndex) && dayIndex >= 0 && dayIndex < days.length ? dayIndex : null;
+}
+
+function agendaKicker(key) {
+  const sourceIndex = activeAgendaDayIndex();
+  if (sourceIndex === null) return t(`${key}.kicker`);
+
+  const sourceDay = localizedDay(sourceIndex)?.title ?? `Dia ${sourceIndex + 1}`;
+  if (state.dayAgenda?.target === "final") {
+    return t(`${key}.kicker.final`, { sourceDay });
+  }
+
+  const targetDay = localizedDay(state.dayIndex)?.title ?? `Dia ${state.dayIndex + 1}`;
+  return t(`${key}.kicker.dayStart`, { day: targetDay, sourceDay });
+}
+
 function allCases() {
   return days.flatMap((day) => day.cases);
 }
@@ -2032,6 +2068,7 @@ function showGame() {
   setHidden(el.summaryScreen, true);
   render();
   startTimer();
+  requestBackgroundMusic();
 }
 
 function render() {
@@ -2194,6 +2231,8 @@ function renderReceipt() {
   if (!state.decided || !state.lastReceipt) {
     delete el.receiptPanel.dataset.stamp;
     el.receiptText.textContent = t("receipt.pending");
+    el.receiptImpact.hidden = true;
+    el.receiptImpact.innerHTML = "";
     return;
   }
 
@@ -2210,8 +2249,38 @@ function renderReceipt() {
   el.receiptText.textContent = t("receipt.full", {
     outcome,
     finance: formatFinanceResult(receipt.finance),
-    deltas: formatDeltas(receipt.deltas),
   });
+  renderReceiptImpact(receipt.deltas);
+}
+
+function renderReceiptImpact(deltas) {
+  const rows = Object.entries(deltas).filter(([, value]) => value !== 0);
+  if (rows.length === 0) {
+    el.receiptImpact.hidden = true;
+    el.receiptImpact.innerHTML = "";
+    return;
+  }
+
+  const names = deltaNames();
+  const maxAbs = Math.max(...rows.map(([, value]) => Math.abs(value)));
+  const rowHtml = rows
+    .map(([key, value]) => {
+      const size = Math.max(8, Math.round((Math.abs(value) / maxAbs) * 50));
+      const sign = value > 0 ? "+" : "";
+      const direction = value > 0 ? "is-positive" : "is-negative";
+      return `
+        <div class="impact-row ${direction}">
+          <span class="impact-name">${names[key] ?? key}</span>
+          <span class="impact-track" aria-hidden="true">
+            <span class="impact-fill" style="--impact-size: ${size}%"></span>
+          </span>
+          <strong class="impact-value">${sign}${value}</strong>
+        </div>`;
+    })
+    .join("");
+
+  el.receiptImpact.hidden = false;
+  el.receiptImpact.innerHTML = `<span class="impact-title">${t("receipt.impact")}</span>${rowHtml}`;
 }
 
 function decide(action) {
@@ -2527,8 +2596,8 @@ function applyPersistentDecisionDeltas(deltas, entry, action, isCorrect) {
   }
 }
 
-function formatDeltas(deltas) {
-  const names = {
+function deltaNames() {
+  return {
     control: t("delta.control"),
     safety: t("delta.safety"),
     backlash: t("delta.backlash"),
@@ -2537,6 +2606,10 @@ function formatDeltas(deltas) {
     runway: t("meter.runway"),
     exodus: t("meter.exodus"),
   };
+}
+
+function formatDeltas(deltas) {
+  const names = deltaNames();
   return Object.entries(deltas)
     .filter(([, value]) => value !== 0)
     .map(([key, value]) => `${names[key]} ${value > 0 ? "+" : ""}${value}`)
@@ -2557,22 +2630,26 @@ function nextCase() {
     return;
   }
 
-  showEvent(day.event);
+  showDaySummary();
 }
 
-function showEvent(event) {
+function showEventForDay(dayIndex = activeAgendaDayIndex() ?? state.dayIndex) {
+  const event = days[dayIndex]?.event;
+  if (!event) {
+    maybeShowInterludeOrAppeal({ agendaDayIndex: dayIndex });
+    return;
+  }
+
   stopTimer();
-  el.eventKicker.textContent = t("event.kicker");
-  const dayIndex = days.findIndex((day) => day.event === event);
-  const eventDayIndex = dayIndex >= 0 ? dayIndex : state.dayIndex;
-  const displayEvent = localizedEvent(eventDayIndex);
+  el.eventKicker.textContent = agendaKicker("event");
+  const displayEvent = localizedEvent(dayIndex);
   el.eventTitle.textContent = displayEvent.title;
   el.eventBody.textContent = displayEvent.body;
   el.eventActions.innerHTML = "";
 
   event.choices.forEach((choice) => {
     const choiceIndex = event.choices.indexOf(choice);
-    const displayChoice = localizedEventChoice(eventDayIndex, choiceIndex);
+    const displayChoice = localizedEventChoice(dayIndex, choiceIndex);
     const button = document.createElement("button");
     button.className = "ghost-action";
     button.textContent = displayChoice.label;
@@ -2585,9 +2662,12 @@ function showEvent(event) {
   setHidden(el.appealScreen, true);
   setHidden(el.summaryScreen, true);
   setHidden(el.eventScreen, false);
+  saveState();
 }
 
 function applyEventChoice(choice) {
+  const agendaDayIndex = activeAgendaDayIndex() ?? state.dayIndex;
+
   Object.entries(choice.effect).forEach(([key, value]) => {
     state.metrics[key] = clamp(state.metrics[key] + value);
   });
@@ -2604,16 +2684,18 @@ function applyEventChoice(choice) {
     return;
   }
 
-  maybeShowInterludeOrAppeal();
+  maybeShowInterludeOrAppeal({ agendaDayIndex });
 }
 
 function maybeShowInterludeOrAppeal(options = {}) {
-  const interludeIndex = nextInterludeForDay(state.dayIndex);
+  const agendaDayIndex = Number.isInteger(options.agendaDayIndex) ? options.agendaDayIndex : activeAgendaDayIndex();
+  const interludeDayIndex = agendaDayIndex ?? state.dayIndex;
+  const interludeIndex = nextInterludeForDay(interludeDayIndex);
   if (interludeIndex !== null) {
     showInterlude(interludeIndex);
     return;
   }
-  maybeShowAppealOrSummary(options);
+  maybeShowAppealOrSummary({ ...options, agendaDayIndex: interludeDayIndex });
 }
 
 function nextInterludeForDay(dayIndex) {
@@ -2637,7 +2719,7 @@ function renderInterlude(interludeIndex = state.interludes.active ?? state.dayIn
   const base = storyInterludes[interludeIndex];
   if (!interlude || !base) return;
 
-  el.interludeKicker.textContent = interlude.kicker;
+  el.interludeKicker.textContent = activeAgendaDayIndex() === null ? interlude.kicker : agendaKicker("interlude");
   el.interludeTitle.textContent = interlude.title;
   el.interludeImage.style.backgroundImage = `url("${base.image}")`;
   el.interludeImage.setAttribute("aria-label", interlude.aria);
@@ -2679,12 +2761,18 @@ function applyInterludeChoice(choice, interludeIndex = state.interludes.active ?
     return;
   }
 
-  maybeShowInterludeOrAppeal();
+  maybeShowInterludeOrAppeal({ agendaDayIndex: activeAgendaDayIndex() ?? state.dayIndex });
 }
 
 function maybeShowAppealOrSummary(options = {}) {
-  if (state.appeals.pending.length > 0) {
+  const inDayAgenda = activeAgendaDayIndex() !== null;
+  if (state.appeals.pending.length > 0 && (!inDayAgenda || !state.dayAgenda.appealShown)) {
+    if (inDayAgenda) state.dayAgenda.appealShown = true;
     showAppeal();
+    return;
+  }
+  if (inDayAgenda) {
+    finishDayAgenda();
     return;
   }
   showDaySummary(options);
@@ -2695,7 +2783,7 @@ function showAppeal() {
   const appeal = state.appeals.pending.shift();
   const entry = findCaseById(appeal.caseId);
   if (!entry) {
-    showDaySummary();
+    maybeShowAppealOrSummary();
     return;
   }
 
@@ -2713,6 +2801,7 @@ function showAppeal() {
 function renderAppeal(entry = findCaseById(state.appeals.active?.caseId), appeal = state.appeals.active) {
   if (!entry || !appeal) return;
   const displayAppeal = localizedAppeal(entry);
+  el.appealKicker.textContent = agendaKicker("appeal");
   el.appealTitle.textContent = displayAppeal.title;
   el.appealBody.textContent = displayAppeal.body;
   el.appealList.innerHTML = displayAppeal.points.map((point) => `<li>${point}</li>`).join("");
@@ -2775,7 +2864,7 @@ function resolveAppeal(action) {
     showFinal(failure);
     return;
   }
-  showDaySummary();
+  maybeShowAppealOrSummary();
 }
 
 function settleDay(timedOut = false) {
@@ -2870,6 +2959,22 @@ function showDaySummary(options = {}) {
   saveState();
 }
 
+function showActiveSummaryScreen() {
+  stopTimer();
+  if (state.activeSummary?.type === "dayStart" || state.activeSummary?.type === "finalStart") {
+    renderDayStartSummary();
+  } else {
+    renderDaySummary();
+  }
+
+  setHidden(el.startScreen, true);
+  setHidden(el.gameScreen, true);
+  setHidden(el.eventScreen, true);
+  setHidden(el.interludeScreen, true);
+  setHidden(el.appealScreen, true);
+  setHidden(el.summaryScreen, false);
+}
+
 function formatSettlementSummary(settlement) {
   if (!settlement) return "";
   const cost = costLabel(settlement.dayIndex);
@@ -2893,32 +2998,112 @@ function renderDaySummary() {
   const dayAccuracy = Math.round((state.score.correct / Math.max(1, state.score.total)) * 100);
   const summary = formatSettlementSummary(settlement);
   const timedOut = Boolean(state.activeSummary?.timedOut);
+  const isLastDay = dayIndex >= days.length - 1;
+  const nextDay = localizedDay(dayIndex + 1);
 
+  el.summaryScreen.dataset.mode = "day-summary";
   el.summaryKicker.textContent = t("summary.kicker");
   el.summaryTitle.textContent = t(timedOut ? "summary.title.timedOut" : "summary.title.completed", { day: day.title });
   el.summaryBody.textContent =
-    state.dayIndex === days.length - 1
+    isLastDay
       ? t("summary.body.final", { summary })
-      : t("summary.body.next", { summary });
+      : t("summary.body.next", { summary, nextDay: nextDay?.title ?? "" });
+  el.summaryStats.className = "summary-stats";
   el.summaryStats.innerHTML = buildSummaryStats(dayAccuracy);
-  el.summaryButton.textContent = state.dayIndex === days.length - 1 ? t("summary.button.final") : t("summary.button.next");
+  el.summaryButton.textContent = isLastDay ? t("summary.button.final") : t("summary.button.next", { day: nextDay?.title ?? "" });
 }
 
 function continueAfterSummary() {
-  if (state.dayIndex >= days.length - 1) {
-    showFinal(null);
+  if (state.activeSummary?.type === "dayStart" || state.activeSummary?.type === "finalStart") {
+    continueAfterDayStart();
     return;
   }
 
-  state.dayIndex += 1;
+  const completedDayIndex = state.activeSummary?.dayIndex ?? state.dayIndex;
+  if (completedDayIndex >= days.length - 1) {
+    state.activeSummary = { type: "finalStart", previousDayIndex: completedDayIndex, dayIndex: completedDayIndex };
+    showActiveSummaryScreen();
+    saveState();
+    return;
+  }
+
+  state.dayIndex = completedDayIndex + 1;
   state.caseIndex = 0;
   state.decided = false;
   state.finance.dayGain = 0;
   state.time.remaining = SHIFT_SECONDS;
+  state.activeSummary = { type: "dayStart", previousDayIndex: completedDayIndex, dayIndex: state.dayIndex };
+  saveState();
+  showActiveSummaryScreen();
+}
+
+function renderDayStartSummary() {
+  const summary = state.activeSummary ?? {};
+  const sourceIndex = Number.isInteger(summary.previousDayIndex) ? summary.previousDayIndex : Math.max(0, state.dayIndex - 1);
+  const targetIndex = Number.isInteger(summary.dayIndex) ? summary.dayIndex : state.dayIndex;
+  const sourceDay = localizedDay(sourceIndex);
+  const targetDay = localizedDay(targetIndex);
+  const isFinalStart = summary.type === "finalStart";
+
+  el.summaryScreen.dataset.mode = "day-start";
+  el.summaryKicker.textContent = isFinalStart ? t("dayStart.final.kicker") : t("dayStart.kicker");
+  el.summaryTitle.textContent = isFinalStart
+    ? t("dayStart.final.title", { day: sourceDay?.title ?? "" })
+    : t("dayStart.title", { from: sourceDay?.title ?? "", to: targetDay?.title ?? "" });
+  el.summaryBody.textContent = isFinalStart
+    ? t("dayStart.final.body", { day: sourceDay?.title ?? "" })
+    : t("dayStart.body", { day: targetDay?.title ?? "", previousDay: sourceDay?.title ?? "" });
+  el.summaryStats.className = "summary-stats day-start-stats";
+  el.summaryStats.innerHTML = buildDayStartStats(sourceIndex, targetIndex, isFinalStart);
+  el.summaryButton.textContent = isFinalStart ? t("dayStart.final.button") : t("dayStart.button", { day: targetDay?.title ?? "" });
+}
+
+function buildDayStartStats(sourceIndex, targetIndex, isFinalStart) {
+  const sourceDay = localizedDay(sourceIndex);
+  const targetDay = localizedDay(targetIndex);
+  const targetLabel = isFinalStart ? t("dayStart.targetFinal") : targetDay?.title ?? "";
+  const directive = isFinalStart ? t("dayStart.finalDirective") : targetDay?.directive ?? "";
+  const quota = isFinalStart ? t("dayStart.noQuota") : formatMoney(currentDayCost().quota);
+  const tiles = [
+    [t("dayStart.stat.current"), targetLabel],
+    [t("dayStart.stat.changed"), t("dayStart.change", { from: sourceDay?.title ?? "", to: targetLabel })],
+    [t("dayStart.stat.quota"), quota],
+    [t("dayStart.stat.pending"), t("dayStart.pending")],
+    [t("dayStart.stat.directive"), directive, true],
+  ];
+
+  return tiles
+    .map(([label, value, wide]) => `<div class="stat-tile${wide ? " wide" : ""}"><span>${label}</span><strong>${value}</strong></div>`)
+    .join("");
+}
+
+function continueAfterDayStart() {
+  const summary = state.activeSummary ?? {};
+  const agendaDayIndex = Number.isInteger(summary.previousDayIndex) ? summary.previousDayIndex : Math.max(0, state.dayIndex - 1);
+  state.dayAgenda.activeDayIndex = agendaDayIndex;
+  state.dayAgenda.target = summary.type === "finalStart" ? "final" : "game";
+  state.dayAgenda.appealShown = false;
   state.activeSummary = null;
   saveState();
+  showEventForDay(agendaDayIndex);
+}
+
+function finishDayAgenda() {
+  const target = state.dayAgenda?.target;
+  state.dayAgenda.activeDayIndex = null;
+  state.dayAgenda.target = null;
+  state.dayAgenda.appealShown = false;
+  state.activeSummary = null;
+  saveState();
+
+  if (target === "final") {
+    showFinal(null);
+    return;
+  }
+
   setHidden(el.summaryScreen, true);
   setHidden(el.interludeScreen, true);
+  setHidden(el.appealScreen, true);
   showGame();
 }
 
@@ -3032,9 +3217,11 @@ function renderFinal() {
   const failureKey = state.finalFailureKey;
   const ending = getEnding(accuracy);
 
+  el.summaryScreen.dataset.mode = "final";
   el.summaryKicker.textContent = failureKey ? t("final.kicker.failure") : t("final.kicker.success");
   el.summaryTitle.textContent = failureKey ? t("final.title.failure") : ending.title;
   el.summaryBody.textContent = failureKey ? t(`failures.${failureKey}`) : ending.body;
+  el.summaryStats.className = "summary-stats";
   el.summaryStats.innerHTML = buildSummaryStats(accuracy);
   el.summaryButton.textContent = t("summary.button.restart");
 }
@@ -3116,10 +3303,92 @@ function resetGame() {
   showStart();
 }
 
+function confirmResetGame() {
+  if (!window.confirm(t("reset.confirm"))) return;
+  resetGame();
+}
+
 function toggleMute() {
   state.muted = !state.muted;
+  if (state.muted) {
+    pauseBackgroundMusic();
+  } else {
+    requestBackgroundMusic();
+  }
   renderUtilityButtons();
   saveState();
+}
+
+function isAboutOpen() {
+  return !el.aboutMeScreen.hidden || !el.aboutUsScreen.hidden;
+}
+
+function showAboutPage(target) {
+  stopTimer();
+  setHidden(el.aboutMeScreen, target !== "me");
+  setHidden(el.aboutUsScreen, target !== "us");
+}
+
+function closeAboutPages() {
+  setHidden(el.aboutMeScreen, true);
+  setHidden(el.aboutUsScreen, true);
+  if (state.started && !state.gameOver && !el.gameScreen.hidden) {
+    startTimer();
+  }
+}
+
+function ensureBackgroundMusic() {
+  if (!backgroundMusicCanLoad) return null;
+  if (backgroundMusic) return backgroundMusic;
+
+  backgroundMusic = new Audio(BACKGROUND_MUSIC_SRC);
+  backgroundMusic.loop = true;
+  backgroundMusic.preload = "none";
+  backgroundMusic.volume = BACKGROUND_MUSIC_VOLUME;
+  return backgroundMusic;
+}
+
+function loadBackgroundMusic() {
+  const music = ensureBackgroundMusic();
+  if (!music || backgroundMusicLoaded) return music;
+  backgroundMusicLoaded = true;
+  music.load();
+  return music;
+}
+
+function requestBackgroundMusic() {
+  backgroundMusicRequested = true;
+  if (state.muted) return;
+
+  const music = loadBackgroundMusic();
+  if (!music) return;
+
+  const playRequest = music.play();
+  if (playRequest?.then) {
+    playRequest
+      .then(() => {
+        backgroundMusicRequested = false;
+      })
+      .catch(() => {
+        backgroundMusicRequested = true;
+      });
+  } else {
+    backgroundMusicRequested = false;
+  }
+}
+
+function pauseBackgroundMusic() {
+  if (backgroundMusic) backgroundMusic.pause();
+}
+
+function requestBackgroundMusicFromGesture() {
+  if (state.started || backgroundMusicRequested) requestBackgroundMusic();
+}
+
+function enableBackgroundMusicLoading() {
+  backgroundMusicCanLoad = true;
+  loadBackgroundMusic();
+  if (backgroundMusicRequested || state.started) requestBackgroundMusic();
 }
 
 function playTone(frequency, duration) {
@@ -3146,8 +3415,14 @@ function applyStaticTranslations() {
   document.querySelectorAll("[data-i18n]").forEach((node) => {
     node.textContent = t(node.dataset.i18n);
   });
+  document.querySelectorAll("[data-i18n-html]").forEach((node) => {
+    node.innerHTML = t(node.dataset.i18nHtml);
+  });
   document.querySelectorAll("[data-i18n-aria-label]").forEach((node) => {
     node.setAttribute("aria-label", t(node.dataset.i18nAriaLabel));
+  });
+  document.querySelectorAll("[data-i18n-alt]").forEach((node) => {
+    node.setAttribute("alt", t(node.dataset.i18nAlt));
   });
   el.languageSelects.forEach((select) => {
     select.value = locale;
@@ -3164,7 +3439,7 @@ function renderUtilityButtons() {
 function refreshLocalizedText() {
   applyStaticTranslations();
   if (!el.gameScreen.hidden) render();
-  if (!el.eventScreen.hidden) showEvent(currentDay().event);
+  if (!el.eventScreen.hidden) showEventForDay(activeAgendaDayIndex() ?? state.dayIndex);
   if (!el.interludeScreen.hidden) renderInterlude();
   if (!el.appealScreen.hidden) renderAppeal();
   if (!el.summaryScreen.hidden) {
@@ -3172,6 +3447,8 @@ function refreshLocalizedText() {
       renderFinal();
     } else if (state.activeSummary?.type === "day") {
       renderDaySummary();
+    } else if (state.activeSummary?.type === "dayStart" || state.activeSummary?.type === "finalStart") {
+      renderDayStartSummary();
     }
   }
 }
@@ -3196,8 +3473,14 @@ function bindEvents() {
     }
     continueAfterSummary();
   });
-  el.resetButton.addEventListener("click", resetGame);
+  el.resetButton.addEventListener("click", confirmResetGame);
   el.muteButton.addEventListener("click", toggleMute);
+  el.aboutButtons.forEach((button) => {
+    button.addEventListener("click", () => showAboutPage(button.dataset.aboutTarget));
+  });
+  el.aboutCloseButtons.forEach((button) => {
+    button.addEventListener("click", closeAboutPages);
+  });
   el.actionButtons.forEach((button) => {
     button.addEventListener("click", () => decide(button.dataset.action));
   });
@@ -3207,7 +3490,14 @@ function bindEvents() {
   el.languageSelects.forEach((select) => {
     select.addEventListener("change", () => setLocale(select.value));
   });
+  window.addEventListener("load", enableBackgroundMusicLoading, { once: true });
+  window.addEventListener("pointerdown", requestBackgroundMusicFromGesture, { passive: true });
   window.addEventListener("keydown", (event) => {
+    requestBackgroundMusicFromGesture();
+    if (isAboutOpen()) {
+      if (event.key === "Escape") closeAboutPages();
+      return;
+    }
     if (el.gameScreen.hidden || state.decided) return;
     const map = {
       "1": "monetize",
@@ -3221,12 +3511,18 @@ function bindEvents() {
 
 bindEvents();
 applyStaticTranslations();
+if (document.readyState === "complete") {
+  window.setTimeout(enableBackgroundMusicLoading, 0);
+}
 
 if (state.started && !state.gameOver) {
-  showGame();
-  if (state.interludes.active !== null) {
+  if (state.activeSummary?.type === "day" || state.activeSummary?.type === "dayStart" || state.activeSummary?.type === "finalStart") {
+    showActiveSummaryScreen();
+  } else if (state.interludes.active !== null) {
+    showGame();
     showInterlude(state.interludes.active);
   } else if (state.appeals.active) {
+    showGame();
     const entry = findCaseById(state.appeals.active.caseId);
     if (entry) {
       renderAppeal(entry, state.appeals.active);
@@ -3237,6 +3533,11 @@ if (state.started && !state.gameOver) {
       setHidden(el.appealScreen, false);
       stopTimer();
     }
+  } else if (activeAgendaDayIndex() !== null) {
+    showGame();
+    showEventForDay(activeAgendaDayIndex());
+  } else {
+    showGame();
   }
 } else {
   showStart();
